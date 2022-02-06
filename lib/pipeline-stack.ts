@@ -19,21 +19,21 @@ export class PipelineStack extends Stack {
                     "npx cdk synth",
                 ],
             }),
-            codeBuildDefaults: {
-                rolePolicy: [
-                    new PolicyStatement({
-                        actions: [
-                            "sts:AssumeRole",
-                            "iam:PassRole",
-                        ],
-                        effect: Effect.ALLOW,
-                        resources: [
-                            `arn:aws:iam::${this.account}:role/cdk-hnb659fds-lookup-role-${this.account}-${this.region}`,
-                            `arn:aws:iam::${this.account}:role/cdk-hnb659fds-deploy-role-${this.account}-${this.region}`,
-                        ]
-                    })
-                ]
-            }
+            // codeBuildDefaults: {
+            //     rolePolicy: [
+            //         new PolicyStatement({
+            //             actions: [
+            //                 "sts:AssumeRole",
+            //                 "iam:PassRole",
+            //             ],
+            //             effect: Effect.ALLOW,
+            //             resources: [
+            //                 `arn:aws:iam::${this.account}:role/cdk-hnb659fds-lookup-role-${this.account}-${this.region}`,
+            //                 `arn:aws:iam::${this.account}:role/cdk-hnb659fds-deploy-role-${this.account}-${this.region}`,
+            //             ]
+            //         })
+            //     ]
+            // }
         })
     }
 }
