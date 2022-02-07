@@ -1,5 +1,5 @@
 import {Construct} from "constructs";
-import {SecretValue, Stack, StackProps} from "aws-cdk-lib";
+import {Environment, SecretValue, Stack, StackProps} from "aws-cdk-lib";
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {GitHubTrigger} from "aws-cdk-lib/aws-codepipeline-actions";
 import {LambdaStage} from "./lambda-stage";
@@ -20,17 +20,20 @@ export class PipelineStack extends Stack {
                 }),
                 commands: [
                     "npm ci",
+                    "npm run test",
                     "npm run build",
                     "npx cdk synth",
                 ],
             }),
         })
 
+        const devEnv: Environment = {
+            account: StringParameter.valueForStringParameter(this, "/dev/workloadAccountId"),
+            region: StringParameter.valueForStringParameter(this, "/dev/workloadRegion"),
+        }
+
         codePipeline.addStage(new LambdaStage(this, "Dev", {
-            env: {
-                account: StringParameter.valueForStringParameter(this, "/dev/workloadAccountId"),
-                region: StringParameter.valueForStringParameter(this, "/dev/workloadRegion"),
-            }
+            env: devEnv,
         }))
     }
 }
