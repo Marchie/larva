@@ -11,13 +11,25 @@ describe('Given Larva app', () => {
     const app = new App();
 
     describe('When a Lambda stack is created', () => {
-        const stack = new LambdaStack(app, 'MyTestStack');
+        const stack = new LambdaStack(app, 'MyTestStack', {
+            env: {
+                account: '111111111111',
+                region: 'mars-north-8',
+            },
+            stageName: 'unittest'
+        });
         const template = Template.fromStack(stack);
 
         test(`Then a Lambda function is created`, () => {
             template.hasResourceProperties('AWS::Lambda::Function', {
                 Runtime: Runtime.NODEJS_14_X.toString(),
                 Handler: "lambda.handler",
+                Environment: {
+                    Variables: {
+                        ACCOUNT_ID: '111111111111',
+                        STAGE_NAME: 'unittest',
+                    }
+                }
             });
         })
 
