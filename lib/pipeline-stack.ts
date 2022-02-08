@@ -14,6 +14,9 @@ interface PipelineStackProps extends StackProps {
     stages: {
         dev: {
             env: RequiredEnvironment
+        },
+        test: {
+            env: RequiredEnvironment
         }
     }
 }
@@ -40,19 +43,37 @@ export class PipelineStack extends Stack {
             }),
         })
 
-        const deployLambdaStage = new LambdaStage(this, "DevWebService", {
+        const deployDevLambdaStage = new LambdaStage(this, "DevWebService", {
             env: props.stages.dev.env,
             stageName: "DEV"
         })
 
-        codePipeline.addStage(deployLambdaStage, {
+        codePipeline.addStage(deployDevLambdaStage, {
             post: [
-                new ShellStep("TestService", {
+                new ShellStep("TestDevService", {
                     commands: [
                         'curl -Ssf $ENDPOINT_URL'
                     ],
                     envFromCfnOutputs: {
-                        ENDPOINT_URL: deployLambdaStage.urlOutput,
+                        ENDPOINT_URL: deployDevLambdaStage.urlOutput,
+                    }
+                })
+            ]
+        })
+
+        const deployTestLambdaStage = new LambdaStage(this, "TestWebService", {
+            env: props.stages.test.env,
+            stageName: "TEST"
+        })
+
+        codePipeline.addStage(deployTestLambdaStage, {
+            post: [
+                new ShellStep("TestTestService", {
+                    commands: [
+                        'curl -Ssf $ENDPOINT_URL'
+                    ],
+                    envFromCfnOutputs: {
+                        ENDPOINT_URL: deployTestLambdaStage.urlOutput,
                     }
                 })
             ]

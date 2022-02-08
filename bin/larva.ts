@@ -3,37 +3,41 @@ import 'source-map-support/register';
 import {App} from 'aws-cdk-lib';
 import {PipelineStack} from "../lib/pipeline-stack";
 
-if (!process.env.CDK_DEFAULT_ACCOUNT) {
-    throw new Error("CDK_DEFAULT_ACCOUNT is not set in environment")
-}
+function getValueFromContextOrEnvironment(key: string): string {
+    const value = app.node.tryGetContext(key) || process.env[key]
+    if (!value) {
+        throw new Error(`no ${key} in context or environment`)
+    }
 
-if (!process.env.CDK_DEFAULT_REGION) {
-    throw new Error("CDK_DEFAULT_REGION is not set in environment")
+    return value
 }
 
 const app = new App();
 
-const devWorkloadAccount = app.node.tryGetContext("DEV_WORKLOAD_ACCOUNT") || process.env.DEV_WORKLOAD_ACCOUNT
-if (!devWorkloadAccount) {
-    throw new Error("no DEV_WORKLOAD_ACCOUNT in context or environment")
-}
-
-const devWorkloadRegion = app.node.tryGetContext("DEV_WORKLOAD_REGION") || process.env.DEV_WORKLOAD_REGION
-if (!devWorkloadRegion) {
-    throw new Error("no DEV_WORKLOAD_REGION in context or environment")
-}
+const ciCdAccount = getValueFromContextOrEnvironment("CDK_DEFAULT_ACCOUNT")
+const ciCdRegion = getValueFromContextOrEnvironment("CDK_DEFAULT_REGION")
+const devWorkloadAccount = getValueFromContextOrEnvironment("DEV_WORKLOAD_ACCOUNT")
+const devWorkloadRegion = getValueFromContextOrEnvironment("DEV_WORKLOAD_REGION")
+const testWorkloadAccount = getValueFromContextOrEnvironment("TEST_WORKLOAD_ACCOUNT")
+const testWorkloadRegion = getValueFromContextOrEnvironment("TEST_WORKLOAD_REGION")
 
 new PipelineStack(app, "PipelineStack", {
     description: "Deploys the Pipeline to the CI/CD account",
     env: {
-        account: process.env.CDK_DEFAULT_ACCOUNT,
-        region: process.env.CDK_DEFAULT_REGION,
+        account: ciCdAccount,
+        region: ciCdRegion,
     },
     stages: {
         dev: {
             env: {
                 account: devWorkloadAccount,
                 region: devWorkloadRegion,
+            }
+        },
+        test: {
+            env: {
+                account: testWorkloadAccount,
+                region: testWorkloadRegion,
             }
         }
     }
