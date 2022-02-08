@@ -1,12 +1,19 @@
 import {Construct} from "constructs";
-import {CfnOutput, Environment, Fn, SecretValue, Stack, StackProps} from "aws-cdk-lib";
+import {SecretValue, Stack, StackProps} from "aws-cdk-lib";
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {GitHubTrigger} from "aws-cdk-lib/aws-codepipeline-actions";
 import {LambdaStage} from "./lambda-stack";
-import {StringParameter} from "aws-cdk-lib/aws-ssm";
+import {ssmStringParameterLookupWithDummyValue} from "./ssm-string-parameter-lookup-with-dummy-value";
+
+interface PipelineStackProps extends StackProps {
+    env: {
+        account: string
+        region: string
+    }
+}
 
 export class PipelineStack extends Stack {
-    constructor(scope: Construct, id: string, props?: StackProps) {
+    constructor(scope: Construct, id: string, props: PipelineStackProps) {
         super(scope, id, props);
 
         const codePipeline = new CodePipeline(this, "Pipeline", {
@@ -27,23 +34,15 @@ export class PipelineStack extends Stack {
             }),
         })
 
-        const devWorkloadAccountIdExportName = "devWorkloadAccountId"
-        new CfnOutput(this, "DevWorkloadAccountId", {
-            value: StringParameter.fromStringParameterName(this, "devWorkloadAccountId", "/dev/workload/accountId").stringValue,
-            exportName: devWorkloadAccountIdExportName,
-        })
+        const devWorkloadAccountId = ssmStringParameterLookupWithDummyValue(this, "/dev/workload/accountId", "accountid")
+        const devWorkloadRegion = ssmStringParameterLookupWithDummyValue(this, "/dev/workload/region", "mars-north-8")
 
-        const devWorkloadRegionExportName = "devWorkloadRegion"
-        new CfnOutput(this, "DevWorkloadRegion", {
-            value: StringParameter.fromStringParameterName(this, "devWorkloadRegion", "/dev/workload/region").stringValue,
-            exportName: devWorkloadRegionExportName,
-        })
-
-        const deployLambdaStage = new LambdaStage(this, id, {
+        const deployLambdaStage = new LambdaStage(this, "DevWebService", {
             env: {
-                account: Fn.importValue(devWorkloadAccountIdExportName),
-                region: Fn.importValue(devWorkloadRegionExportName),
-            }
+                account: devWorkloadAccountId,
+                region: devWorkloadRegion,
+            },
+            stageName: "DEV"
         })
 
         codePipeline.addStage(deployLambdaStage, {

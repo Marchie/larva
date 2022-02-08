@@ -1,19 +1,73 @@
 import {APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context} from "aws-lambda";
 import {handler} from "./lambda";
 
-describe(`When handler is called`, () => {
-    const event: APIGatewayProxyEventV2 = givenAPIGatewayProxyEventV2()
-    const context: Context = givenContext()
+describe(`Given a Lambda environment`, () => {
+    const originalEnvironment = process.env
+    const stageName = "foo"
+    const accountId = "111111111111"
 
-    test(`Then the status code is 200 and the body is "Hello world!"`, async () => {
-        const result: APIGatewayProxyResultV2 = await handler(event, context)
+    beforeEach(() => {
+        jest.resetModules()
+        process.env = { ...originalEnvironment }
+    })
 
-        const expectation: APIGatewayProxyResultV2 = {
-            body: "Hello world!",
-            statusCode: 200,
-        }
+    afterAll(() => {
+        process.env = originalEnvironment
+    })
 
-        expect(result).toEqual(expectation)
+    describe(`When environment is configured correctly`, () => {
+        process.env.ACCOUNT_ID = accountId
+        process.env.STAGE_NAME = stageName
+
+        const event: APIGatewayProxyEventV2 = givenAPIGatewayProxyEventV2()
+        const context: Context = givenContext()
+
+        test(`Then the status code is 200 and the stage name and last four digits of the account ID are included in the body`, async () => {
+            const result: APIGatewayProxyResultV2 = await handler(event, context)
+
+            const expectation: APIGatewayProxyResultV2 = {
+                body: `Hello from foo (1111)!`,
+                statusCode: 200,
+            }
+
+            expect(result).toEqual(expectation)
+        })
+    })
+
+    describe(`When ACCOUNT_ID is not in environment`, () => {
+        process.env.STAGE_NAME = stageName
+
+        const event: APIGatewayProxyEventV2 = givenAPIGatewayProxyEventV2()
+        const context: Context = givenContext()
+
+        test(`Then the status code is 500 and the body describes the error"`, async () => {
+            const result: APIGatewayProxyResultV2 = await handler(event, context)
+
+            const expectation: APIGatewayProxyResultV2 = {
+                body: `ACCOUNT_ID is not defined`,
+                statusCode: 500,
+            }
+
+            expect(result).toEqual(expectation)
+        })
+    })
+
+    describe(`When STAGE_NAME is not in environment`, () => {
+        process.env.ACCOUNT_ID = accountId
+
+        const event: APIGatewayProxyEventV2 = givenAPIGatewayProxyEventV2()
+        const context: Context = givenContext()
+
+        test(`Then the status code is 500 and the body describes the error"`, async () => {
+            const result: APIGatewayProxyResultV2 = await handler(event, context)
+
+            const expectation: APIGatewayProxyResultV2 = {
+                body: `STAGE_NAME is not defined`,
+                statusCode: 500,
+            }
+
+            expect(result).toEqual(expectation)
+        })
     })
 })
 
