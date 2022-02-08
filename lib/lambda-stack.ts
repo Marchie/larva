@@ -1,9 +1,11 @@
-import {CfnOutput, Stack, StackProps, Stage, StageProps} from 'aws-cdk-lib';
+import {CfnOutput, Duration, Stack, StackProps, Stage, StageProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
-import {Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
+import {Alias, Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {resolve} from "path";
 import {HttpApi, HttpMethod} from "@aws-cdk/aws-apigatewayv2-alpha"
 import {HttpLambdaIntegration} from "@aws-cdk/aws-apigatewayv2-integrations-alpha"
+import {LambdaDeploymentConfig, LambdaDeploymentGroup} from "aws-cdk-lib/aws-codedeploy";
+import {Alarm, Metric} from "aws-cdk-lib/aws-cloudwatch";
 
 export class LambdaStack extends Stack {
     public readonly urlOutput: CfnOutput;
@@ -17,22 +19,52 @@ export class LambdaStack extends Stack {
             runtime: Runtime.NODEJS_14_X,
         });
 
-        const gwIntegration = new HttpLambdaIntegration("LarvaGatewayIntegation", handler);
+        const alias = new Alias(this, "LarvaLambdaAlias", {
+            aliasName: "Current",
+            version: handler.currentVersion,
+        });
 
-        const gw = new HttpApi(this, "LarvaGateway", {
+        const apiGatewayIntegration = new HttpLambdaIntegration("LarvaGatewayIntegation", alias);
+
+        const gatewayId = "LarvaGateway"
+        const gateway = new HttpApi(this, gatewayId, {
             description: "Endpoint for a simple Lambda-powered web service",
         });
 
-        gw.addRoutes({
+        gateway.addRoutes({
             path: "/",
             methods: [
                 HttpMethod.GET,
             ],
-            integration: gwIntegration,
+            integration: apiGatewayIntegration,
         })
 
-        this.urlOutput = new CfnOutput(this, 'URL', {
-            value: gw.apiEndpoint
+        const gateway5XXFailureAlarm = new Alarm(this, "Larva5XXFailureAlarm", {
+            alarmDescription: "A 5XX error code is returned to the API Gateway",
+            metric: new Metric({
+                metricName: "5XXError",
+                namespace: "AWS/ApiGateway",
+                dimensionsMap: {
+                    'ApiName': gatewayId,
+                },
+                period: Duration.minutes(1),
+                statistic: "Sum"
+            }),
+            evaluationPeriods: 1,
+            threshold: 1,
+        })
+
+        new LambdaDeploymentGroup(this, "LarvaDeploymentGroup", {
+            alias,
+            autoRollback: undefined,
+            deploymentConfig: LambdaDeploymentConfig.CANARY_10PERCENT_5MINUTES,
+            alarms: [
+                gateway5XXFailureAlarm,
+            ],
+        });
+
+        this.urlOutput = new CfnOutput(this, 'LarvaURL', {
+            value: gateway.apiEndpoint
         })
     }
 }
