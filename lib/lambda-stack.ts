@@ -1,4 +1,4 @@
-import {CfnOutput, Stack, StackProps} from 'aws-cdk-lib';
+import {CfnOutput, Stack, StackProps, Stage, StageProps} from 'aws-cdk-lib';
 import {Construct} from 'constructs';
 import {Code, Function, Runtime} from 'aws-cdk-lib/aws-lambda';
 import {resolve} from "path";
@@ -34,5 +34,17 @@ export class LambdaStack extends Stack {
         this.urlOutput = new CfnOutput(this, 'URL', {
             value: gw.apiEndpoint
         })
+    }
+}
+
+export class LambdaStage extends Stage {
+    public readonly urlOutput: CfnOutput;
+
+    constructor(scope: Construct, id: string, props?: StageProps) {
+        super(scope, id, props);
+
+        const service = new LambdaStack(this, "Webservice");
+
+        this.urlOutput = service.urlOutput
     }
 }

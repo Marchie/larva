@@ -11,6 +11,15 @@ new PipelineStack(app, "PipelineStack", {
         account: process.env.AWS_CI_CD_ACCOUNT,
         region: process.env.AWS_CI_CD_REGION,
     },
+    stages: [
+        {
+            id: "Dev",
+            env: {
+                account: process.env.AWS_DEV_WORKLOAD_ACCOUNT,
+                region: process.env.AWS_DEV_WORKLOAD_REGION,
+            }
+        }
+    ]
 })
 
 app.synth();

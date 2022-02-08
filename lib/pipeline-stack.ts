@@ -2,11 +2,17 @@ import {Construct} from "constructs";
 import {Environment, SecretValue, Stack, StackProps} from "aws-cdk-lib";
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {GitHubTrigger} from "aws-cdk-lib/aws-codepipeline-actions";
-import {LambdaStage} from "./lambda-stage";
-import {StringParameter} from "aws-cdk-lib/aws-ssm";
+import {LambdaStage} from "./lambda-stack";
+
+interface PipelineStackProps extends StackProps {
+    stages: {
+        id: string,
+        env: Environment,
+    }[]
+}
 
 export class PipelineStack extends Stack {
-    constructor(scope: Construct, id: string, props?: StackProps) {
+    constructor(scope: Construct, id: string, props: PipelineStackProps) {
         super(scope, id, props);
 
         const codePipeline = new CodePipeline(this, "Pipeline", {
@@ -27,13 +33,12 @@ export class PipelineStack extends Stack {
             }),
         })
 
-        const devEnv: Environment = {
-            account: StringParameter.valueForStringParameter(this, "/dev/workloadAccountId"),
-            region: StringParameter.valueForStringParameter(this, "/dev/workloadRegion"),
-        }
+        const {stages} = props
 
-        codePipeline.addStage(new LambdaStage(this, "Dev", {
-            env: devEnv,
-        }))
+        stages.forEach(({id, env}) => {
+            codePipeline.addStage(new LambdaStage(this, id, {
+                env,
+            }))
+        })
     }
 }
