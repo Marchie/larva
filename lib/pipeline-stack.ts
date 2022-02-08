@@ -1,18 +1,12 @@
 import {Construct} from "constructs";
-import {Environment, SecretValue, Stack, StackProps} from "aws-cdk-lib";
+import {CfnOutput, Environment, Fn, SecretValue, Stack, StackProps} from "aws-cdk-lib";
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {GitHubTrigger} from "aws-cdk-lib/aws-codepipeline-actions";
 import {LambdaStage} from "./lambda-stack";
-
-interface PipelineStackProps extends StackProps {
-    stages: {
-        id: string,
-        env: Environment,
-    }[]
-}
+import {StringParameter} from "aws-cdk-lib/aws-ssm";
 
 export class PipelineStack extends Stack {
-    constructor(scope: Construct, id: string, props: PipelineStackProps) {
+    constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
 
         const codePipeline = new CodePipeline(this, "Pipeline", {
@@ -33,25 +27,36 @@ export class PipelineStack extends Stack {
             }),
         })
 
-        const {stages} = props
+        const devWorkloadAccountIdExportName = "devWorkloadAccountId"
+        new CfnOutput(this, "DevWorkloadAccountId", {
+            value: StringParameter.fromStringParameterName(this, "devWorkloadAccountId", "/dev/workload/accountId").stringValue,
+            exportName: devWorkloadAccountIdExportName,
+        })
 
-        stages.forEach(({id, env}) => {
-            const deployLambdaStage = new LambdaStage(this, id, {
-                env,
-            })
+        const devWorkloadRegionExportName = "devWorkloadRegion"
+        new CfnOutput(this, "DevWorkloadRegion", {
+            value: StringParameter.fromStringParameterName(this, "devWorkloadRegion", "/dev/workload/region").stringValue,
+            exportName: devWorkloadRegionExportName,
+        })
 
-            codePipeline.addStage(deployLambdaStage, {
-                post: [
-                    new ShellStep("TestService", {
-                        commands: [
-                            'curl -Ssf $ENDPOINT_URL'
-                        ],
-                        envFromCfnOutputs: {
-                            ENDPOINT_URL: deployLambdaStage.urlOutput,
-                        }
-                    })
-                ]
-            })
+        const deployLambdaStage = new LambdaStage(this, id, {
+            env: {
+                account: Fn.importValue(devWorkloadAccountIdExportName),
+                region: Fn.importValue(devWorkloadRegionExportName),
+            }
+        })
+
+        codePipeline.addStage(deployLambdaStage, {
+            post: [
+                new ShellStep("TestService", {
+                    commands: [
+                        'curl -Ssf $ENDPOINT_URL'
+                    ],
+                    envFromCfnOutputs: {
+                        ENDPOINT_URL: deployLambdaStage.urlOutput,
+                    }
+                })
+            ]
         })
     }
 }
