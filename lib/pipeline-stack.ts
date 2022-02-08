@@ -3,12 +3,18 @@ import {SecretValue, Stack, StackProps} from "aws-cdk-lib";
 import {CodePipeline, CodePipelineSource, ShellStep} from "aws-cdk-lib/pipelines";
 import {GitHubTrigger} from "aws-cdk-lib/aws-codepipeline-actions";
 import {LambdaStage} from "./lambda-stack";
-import {ssmStringParameterLookupWithDummyValue} from "./ssm-string-parameter-lookup-with-dummy-value";
+
+interface RequiredEnvironment {
+    account: string
+    region: string
+}
 
 interface PipelineStackProps extends StackProps {
-    env: {
-        account: string
-        region: string
+    env: RequiredEnvironment,
+    stages: {
+        dev: {
+            env: RequiredEnvironment
+        }
     }
 }
 
@@ -34,14 +40,8 @@ export class PipelineStack extends Stack {
             }),
         })
 
-        const devWorkloadAccountId = ssmStringParameterLookupWithDummyValue(this, "/dev/workload/accountId", "accountid")
-        const devWorkloadRegion = ssmStringParameterLookupWithDummyValue(this, "/dev/workload/region", "mars-north-8")
-
         const deployLambdaStage = new LambdaStage(this, "DevWebService", {
-            env: {
-                account: devWorkloadAccountId,
-                region: devWorkloadRegion,
-            },
+            env: props.stages.dev.env,
             stageName: "DEV"
         })
 
