@@ -36,9 +36,22 @@ export class PipelineStack extends Stack {
         const {stages} = props
 
         stages.forEach(({id, env}) => {
-            codePipeline.addStage(new LambdaStage(this, id, {
+            const deployLambdaStage = new LambdaStage(this, id, {
                 env,
-            }))
+            })
+
+            codePipeline.addStage(deployLambdaStage, {
+                post: [
+                    new ShellStep("TestService", {
+                        commands: [
+                            'curl -Ssf $ENDPOINT_URL'
+                        ],
+                        envFromCfnOutputs: {
+                            ENDPOINT_URL: deployLambdaStage.urlOutput,
+                        }
+                    })
+                ]
+            })
         })
     }
 }
