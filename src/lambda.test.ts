@@ -5,12 +5,12 @@ describe(`When handler is called`, () => {
     const event: APIGatewayProxyEventV2 = givenAPIGatewayProxyEventV2()
     const context: Context = givenContext()
 
-    test(`Then the status code is 200 and the body is "Hello world!"`, async () => {
+    test(`Then the status code is 500 and the body is "Something went wrong!"`, async () => {
         const result: APIGatewayProxyResultV2 = await handler(event, context)
 
         const expectation: APIGatewayProxyResultV2 = {
-            body: "Hello world!",
-            statusCode: 200,
+            body: "Something went wrong!",
+            statusCode: 500,
         }
 
         expect(result).toEqual(expectation)
