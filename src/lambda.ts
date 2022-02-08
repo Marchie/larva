@@ -2,7 +2,7 @@ import {APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context} from 'aws-lamb
 
 export async function handler(event: APIGatewayProxyEventV2, context: Context): Promise<APIGatewayProxyResultV2> {
     return {
-        body: 'Something went wrong!',
-        statusCode: 500,
+        body: 'Hello world!',
+        statusCode: 200,
     }
 }
