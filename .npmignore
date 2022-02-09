@@ -4,3 +4,9 @@
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# Test coverage
+coverage
+
+# IntelliJ IDEA
+.idea

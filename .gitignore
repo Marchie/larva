@@ -7,4 +7,11 @@ node_modules
 .cdk.staging
 cdk.out
 
+# Scripts
 *.sh
+
+# Test coverage directory
+coverage
+
+# IntelliJ IDEA
+.idea

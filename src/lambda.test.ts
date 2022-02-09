@@ -1,10 +1,10 @@
 import {APIGatewayProxyEventV2, APIGatewayProxyResultV2, Context} from "aws-lambda";
 import {handler} from "./lambda";
 
-describe(`Given a Lambda environment`, () => {
+describe(`Lambda function`, () => {
     const originalEnvironment = process.env
     const stageName = "foo"
-    const accountId = "111111111111"
+    const accountId = "123456789012"
     const event = givenAPIGatewayProxyEventV2()
     const context = givenContext()
 
@@ -17,21 +17,25 @@ describe(`Given a Lambda environment`, () => {
         process.env = originalEnvironment
     })
 
-    test(`When environment is configured correctly Then the status code is 200 and the stage name and last four digits of the account ID are included in the body`, async () => {
+    test(`Given the environment is correctly configured
+When the Lambda function is invoked
+Then the status code is 200 and the stage name and first four digits of the account ID are included in the body`, async () => {
         process.env.ACCOUNT_ID = accountId
         process.env.STAGE_NAME = stageName
 
         const result: APIGatewayProxyResultV2 = await handler(event, context)
 
         const expectation: APIGatewayProxyResultV2 = {
-            body: `Hello from foo (1111)!`,
+            body: `Hello from foo (1234)!`,
             statusCode: 200,
         }
 
         expect(result).toEqual(expectation)
     })
 
-    test(`When ACCOUNT_ID is not in environment Then the status code is 500 and the body describes the error"`, async () => {
+    test(`Given the environment is missing the ACCOUNT_ID
+When the Lambda function is invoked 
+Then the status code is 500 and the body describes the error"`, async () => {
         process.env.STAGE_NAME = stageName
 
         const result: APIGatewayProxyResultV2 = await handler(event, context)
@@ -44,7 +48,9 @@ describe(`Given a Lambda environment`, () => {
         expect(result).toEqual(expectation)
     })
 
-    test(`When STAGE_NAME is not in environment Then the status code is 500 and the body describes the error"`, async () => {
+    test(`Given the environment is missing the STAGE_NAME
+When the Lambda function is invoked
+Then the status code is 500 and the body describes the error"`, async () => {
         process.env.ACCOUNT_ID = accountId
 
         const result: APIGatewayProxyResultV2 = await handler(event, context)
