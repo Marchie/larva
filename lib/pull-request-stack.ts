@@ -34,7 +34,7 @@ export class PullRequestStack extends Stack {
     });
 
     new Project(this, "PullRequestChecks", {
-      projectName: "Larva pull request checks",
+      projectName: "LarvaPullRequestChecks",
       description:
         "Runs unit tests, linting checks and static analysis of dependencies for known security vulnerabilities",
       badge: true,
