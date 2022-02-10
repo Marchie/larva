@@ -6,7 +6,7 @@ import {
 
 export async function handler(
   event: APIGatewayProxyEventV2,
-  context: Context
+  context: Context,
 ): Promise<APIGatewayProxyResultV2> {
   if (!process.env.ACCOUNT_ID) {
     return {
@@ -26,6 +26,6 @@ export async function handler(
     body: `Hello from ${
       process.env.STAGE_NAME
     } (${process.env.ACCOUNT_ID.substring(0, 4)})!`,
-    statusCode: 200,
+    statusCode: 400,
   };
 }

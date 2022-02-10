@@ -10,7 +10,7 @@ My experimentation with AWS CDK Pipelines!
 * [x] Code for the infrastructure and the application should live together in the same repository. (i.e.
         It should be within the gift of the development team to define the application infrastructure and 
         easily add stages to the pipeline when appropriate.)
-* [ ] Checks that run automatically on creation of a GitHub pull request. (i.e. We should be able to validate work
+* [x] Checks that run automatically on creation of a GitHub pull request. (i.e. We should be able to validate work
         before it gets merged into a named branch, e.g. `main`, `develop`, etc.)
 * [ ] Synthetic load to test canary deployments during stage deployments.
 
