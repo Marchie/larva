@@ -12,6 +12,7 @@ My experimentation with AWS CDK Pipelines!
         easily add stages to the pipeline when appropriate.)
 * [ ] Checks that run automatically on creation of a GitHub pull request. (i.e. We should be able to validate work
         before it gets merged into a named branch, e.g. `main`, `develop`, etc.)
+* [ ] Synthetic load to test canary deployments during stage deployments.
 
 ## CDK
 
@@ -69,6 +70,8 @@ e.g. `cdk deploy --profile my-ci-cd-account`
     interesting later on in the video where the pipeline includes a canary deployment. (i.e. the updated code is served
     to a proportion of users for a period of time; if the updated code triggers a CloudWatch Alarm once it has been
     deployed, then CodeDeploy automatically cancels the deployment and rolls back to the previous version.)
+* [GitHub repository for the demo in the Enhanced CI/CD with AWS CDK - AWS Online Tech Talks video](https://github.com/aws-samples/cdk-pipelines-demo/tree/typescript):
+    Typescript source for the demo.
 * [AWS re:Invent 2021 - Automating cross-account CI/CD pipelines](https://www.youtube.com/watch?v=AF-pSRSGNks): A video
     which goes a bit more in depth on how one might build a CodePipeline in a more "traditional" way. (i.e. _not_ using
     the CDK Pipelines construct library.) This is a bit heavier on "raw" CloudFormation - probably a bit beyond where

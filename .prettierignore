@@ -1,0 +1,7 @@
+*.js
+!jest.config.js
+*.d.ts
+.idea
+cdk.out
+coverage
+node_modules
