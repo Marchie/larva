@@ -46,7 +46,7 @@ Then the status code is 500 and the body describes the error"`, async () => {
 
     const expectation: APIGatewayProxyResultV2 = {
       body: `ACCOUNT_ID is not defined`,
-      statusCode: 500,
+      statusCode: 502,
     };
 
     expect(result).toEqual(expectation);
